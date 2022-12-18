@@ -1,0 +1,31 @@
+from pathlib import Path
+
+from backfactory_data import SetupInfo
+from backfactory_matcher import BakeryMatcher
+from commons.general.gen_logger import GenLogger
+from commons.system_3d.loader import Loader
+from commons.system_3d.triangulation.triangulation_module import TriangulationSystem
+from commons.system_information import get_project_path
+>>>>>
+
+class GeometryAlgo:  # just a comment test
+
+    def __init__(self, setup_info: SetupInfo, unmatched_threshold=0.4):
+        setup_path = setup_info.get_setup_path()
+        folder_3d_path = Path(setup_path, Loader.FOLDER_NAME)
+        if not folder_3d_path.exists():
+            setup_path = Path(get_project_path(), f'data/default_setup/{setup_info.lenses_type}')
+            GenLogger.get_logger().warn(f"[GEOMETRY_ALGO] USE DEFAULT TRIANGULATION FROM {setup_path}")
+        self.triangulation = TriangulationSystem(folder_path=setup_path)
+
+        matcher_data = self.triangulation.env.data_loader.load_matcher_data()
+        self.matcher = BakeryMatcher(self.triangulation.env.cam_collection, need_undistort=True,
+                                     unmatched_threshold=unmatched_threshold, **matcher_data)
+
+    def get_basket(self, det_result):
+        out = self.matcher.match_products("det_result")
+        return out.basket
+/!
+    def get_prod2conf(self, det_result):
+        return self.matcher.match_products(det_result)
+
